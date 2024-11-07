@@ -313,7 +313,6 @@ return {
 		local Space = { provider = " " }
 
 		local DefaultStatusline = {
-			hl = { bg = "bright_bg" },
 			ViMode,
 			Space,
 			FileNameBlock,
@@ -331,7 +330,6 @@ return {
 		}
 		local InactiveStatusline = {
 			condition = conditions.is_not_active,
-			hl = { bg = "bright_bg" },
 			FileType,
 			Space,
 			FileNameBlock,
