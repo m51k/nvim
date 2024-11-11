@@ -12,6 +12,7 @@ return {
 		-- local spec = require("nightfox.spec").load("carbonfox")
 		local function setup_colors()
 			return {
+				black = "#1d2026",
 				bright_bg = utils.get_highlight("Folded").bg,
 				bright_fg = utils.get_highlight("Folded").fg,
 				red = utils.get_highlight("DiagnosticError").fg,
