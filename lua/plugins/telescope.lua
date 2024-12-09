@@ -1,12 +1,12 @@
 return {
 	"nvim-telescope/telescope.nvim",
-	branch = "0.1.x",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
-		"nvim-tree/nvim-web-devicons",
+		"echasnovski/mini.icons",
 	},
 	config = function()
+		MiniIcons.mock_nvim_web_devicons()
 		require("telescope").setup({
 			path_display = { "smart" },
 			defaults = {
