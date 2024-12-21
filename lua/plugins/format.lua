@@ -15,8 +15,9 @@ return {
 				-- json = { "prettier" },
 				-- yaml = { "prettier" },
 				-- markdown = { "prettier" },
-				python = { "isort", "black" },
+				-- python = { "isort", "black" },
 				lua = { "stylua" },
+				c = { "clang-format" },
 			},
 			format_on_save = {
 				lsp_fallback = true,
