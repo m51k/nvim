@@ -3,7 +3,7 @@ return {
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		-- "hrsh7th/cmp-nvim-lsp",
-		"saghen/blink.cmp"
+		"saghen/blink.cmp",
 	},
 	config = function()
 		local lspconfig = require("lspconfig")
@@ -12,7 +12,7 @@ return {
 
 		local keymap = vim.keymap -- for conciseness
 
-		vim.api.nvim_create_autocmd({ 'LspProgress' }, {
+		vim.api.nvim_create_autocmd({ "LspProgress" }, {
 			callback = function(context)
 				vim.notify(vim.inspect(context))
 				-- or vim.print(context) if you want something less invasive

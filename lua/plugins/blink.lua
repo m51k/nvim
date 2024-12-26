@@ -17,14 +17,14 @@ return {
 				-- nvim-cmp style menu
 				draw = {
 					columns = {
-						{ "label",     "label_description", gap = 1 },
-						{ "kind_icon", "kind" }
+						{ "label", "label_description", gap = 1 },
+						{ "kind_icon", "kind" },
 					},
-				}
+				},
 			},
 		},
 		appearance = {
-			nerd_font_variant = "normal"
+			nerd_font_variant = "normal",
 		},
 
 		sources = {
@@ -32,5 +32,5 @@ return {
 			cmdline = {},
 		},
 	},
-	opts_extend = { "sources.default" }
+	opts_extend = { "sources.default" },
 }

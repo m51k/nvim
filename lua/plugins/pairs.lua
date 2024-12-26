@@ -8,7 +8,7 @@ return {
 		markdown = true,
 	},
 	config = function()
-		local pairs = require('mini.pairs')
+		local pairs = require("mini.pairs")
 		pairs.setup()
 	end,
 }
