@@ -24,7 +24,7 @@ now(function()
 	vim.g.maplocalleader = "\\"
 	vim.wo.number = true
 	vim.wo.relativenumber = true
-	vim.o.tabstop = 4
+	vim.o.tabstop = 8
 	vim.o.softtabstop = 0
 	vim.o.cursorline = true
 	vim.g.netrw_bufsettings = "noma nomod nu rnu nobl nowrap ro"
