@@ -13,8 +13,6 @@ if not vim.loop.fs_stat(mini_path) then
 	vim.cmd("packadd mini.deps | helptags ALL")
 	vim.cmd('echo "Installed `mini.deps`" | redraw')
 end
-
--- Set up 'mini.deps' (customize to your liking)
 require("mini.deps").setup({ path = { package = path_package } })
 
 local add, now, later = MiniDeps.add, MiniDeps.now, MiniDeps.later
@@ -34,7 +32,10 @@ later(add({ source = "echasnovski/mini.base16" }))
 later(add({ source = "echasnovski/mini.pick" }))
 later(add({ source = "echasnovski/mini.pairs" }))
 later(add({ source = "neovim/nvim-lspconfig" }))
-later(add({ source = "nvim-treesitter/nvim-treesitter" }))
+later(add({ source = "nvim-treesitter/nvim-treesitter",
+	-- depends = { "nvim-treesitter/nvim-ts-autotag" },
+	hooks = { post_checkout = function() vim.cmd('TSUpdate') end }
+}))
 
 now(function()
 	require("mini.base16").setup({
@@ -70,50 +71,22 @@ later(function()
 end)
 later(function()
 	require("nvim-treesitter.configs").setup({
-		-- Install parsers synchronously (only applied to `ensure_installed`)
-		sync_install = false,
-
-		-- Automatically install missing parsers when entering buffer
-		-- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
 		auto_install = true,
-
-		-- List of parsers to ignore installing (or "all")
-		ignore_install = {},
-
 		highlight = { enable = true },
-
-		-- enable indentation
 		indent = { enable = true },
-
 		-- enable autotagging (w/ nvim-ts-autotag plugin)
-		autotag = { enable = true },
-
-		modules = {},
-
-		-- ensure these language parsers are installed
+		-- autotag = { enable = true },
 		ensure_installed = {
-			"json",
-			"javascript",
-			"typescript",
-			"html",
-			"css",
-			"markdown",
 			"bash",
-			"lua",
+			"c",
+			"css",
 			"dockerfile",
 			"gitignore",
-			"c",
-			"php",
+			"html",
+			"javascript",
+			"lua",
+			"markdown",
 			"rust",
-		},
-		incremental_selection = {
-			enable = true,
-			keymaps = {
-				init_selection = "<C-space>",
-				node_incremental = "<C-space>",
-				scope_incremental = false,
-				node_decremental = "<bs>",
-			},
 		},
 	})
 end)
@@ -127,15 +100,13 @@ now(function()
 	vim.api.nvim_create_autocmd("LspAttach", {
 		group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 		callback = function(ev)
-			-- Buffer local mappings.
-			-- See `:help vim.lsp.*` for documentation on any of the below functions
 			local opts = { buffer = ev.buf, silent = true }
 
 			opts.desc = "Show documentation for what is under cursor"
-			vim.keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
+			vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
 
 			opts.desc = "Restart LSP"
-			vim.keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
+			vim.keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
 		end,
 	})
 	require("lspconfig").lua_ls.setup({
