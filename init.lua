@@ -103,8 +103,7 @@ later(function()
 		},
 	})
 end)
-
--- uncomment for highlighting
+-- uncomment for completion 
 --
 -- later(function()
 -- 	require("mini.completion").setup()
