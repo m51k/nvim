@@ -26,6 +26,8 @@ now(function()
 	vim.o.tabstop = 8
 	vim.o.softtabstop = 0
 	vim.o.cursorline = true
+	vim.o.showmode = false
+	vim.o.background = "dark"
 	vim.g.netrw_bufsettings = "noma nomod nu rnu nobl nowrap ro"
 end)
 
@@ -43,52 +45,80 @@ later(add({
 now(function()
 	require("mini.base16").setup({
 		palette = {
-			-- base00 = "#000000",
-			-- base01 = "#111111",
-			-- base02 = "#333333",
-			-- base03 = "#bbbbbb",
-			-- base04 = "#dddddd",
-			-- base05 = "#ffffff",
-			-- base06 = "#ffffff",
-			-- base07 = "#ffffff",
-			-- base09 = "#ff2222",
-			-- base08 = "#ff9922",
-			-- base0A = "#ff22ff",
-			-- base0B = "#22ff22",
-			-- base0C = "#4444ff",
-			-- base0D = "#22ffff",
-			-- base0E = "#ffff22",
-			-- base0F = "#999999",
-
-			base00 = "#181818",
-			base01 = "#282828",
-			base02 = "#383838",
-			base03 = "#585858",
-			base04 = "#b8b8b8",
-			base05 = "#d8d8d8",
-			base06 = "#e8e8e8",
-			base07 = "#f8f8f8",
-			base08 = "#ab4642",
-			base09 = "#dc9656",
-			base0A = "#f7ca88",
-			base0B = "#a1b56c",
-			base0C = "#86c1b9",
-			base0D = "#7cafc2",
-			base0E = "#ba8baf",
-			-- base0F = "#a16946",
-			base0F = "#b8b8b8"
+			base00 = "#1A1B26",
+			base01 = "#16161E",
+			base02 = "#2F3549",
+			base03 = "#444B6A",
+			base04 = "#787C99",
+			base05 = "#A9B1D6",
+			base06 = "#CBCCD1",
+			base07 = "#D5D6DB",
+			base08 = "#C0CAF5",
+			base09 = "#A9B1D6",
+			base0A = "#0DB9D7",
+			base0B = "#9ECE6A",
+			base0C = "#B4F9F8",
+			base0D = "#2AC3DE",
+			base0E = "#BB9AF7",
+			base0F = "#F7768E",
 		},
 	})
+end)
+now(function()
+	require("mini.starter").setup()
 end)
 later(function()
 	require("mini.pick").setup({
 		vim.keymap.set("n", "<leader>ff", "<cmd>Pick files<cr>", { desc = "find file" }),
-		vim.keymap.set("n", "<leader>fs", "<cmd>Pick grep<cr>", { desc = "find file" }),
-		vim.keymap.set("n", "<leader>fb", "<cmd>Pick buffers<cr>", { desc = "find file" }),
+		vim.keymap.set("n", "<leader>fs", "<cmd>Pick grep<cr>", { desc = "find string" }),
+		vim.keymap.set("n", "<leader>fb", "<cmd>Pick buffers<cr>", { desc = "find buffer" }),
+	})
+end)
+later(function()
+	require("mini.files").setup({
+		-- vim.keymap.set("n", "<leader>op", "<cmd>Pick files<cr>", { desc = "find file" }),
+		vim.keymap.set("n", "<leader>e", function()
+			if not require("mini.files").close() then
+				require("mini.files").open()
+			end
+		end, { desc = "explore" }),
 	})
 end)
 later(function()
 	require("mini.pairs").setup()
+end)
+later(function()
+	require("mini.icons").setup()
+end)
+later(function()
+	require("mini.statusline").setup()
+end)
+later(function()
+	require("mini.bracketed").setup()
+end)
+-- later(function()
+-- 	require("mini.ai").setup()
+-- end)
+later(function()
+	require("mini.notify").setup()
+end)
+later(function()
+	require("mini.comment").setup()
+end)
+later(function()
+	require("mini.indentscope").setup({
+		draw = {
+			animation = function()
+				return 0
+			end,
+		},
+	})
+end)
+later(function()
+	require("mini.move").setup()
+end)
+later(function()
+	require("mini.diff").setup()
 end)
 later(function()
 	require("mini.hipatterns").setup({
@@ -104,11 +134,23 @@ later(function()
 		},
 	})
 end)
--- uncomment for completion 
+-- uncomment for completion
 --
--- later(function()
--- 	require("mini.completion").setup()
--- end)
+later(function()
+	require("mini.completion").setup({
+		-- dont want this to show up unless intentionally
+		delay = { completion = 10 ^ 3.301, info = 10 ^ 3.301, signature = 10 ^ 3.301 },
+	})
+end)
+later(function()
+    require("mini.trailspace").setup()
+end)
+later(function()
+    require("mini.surround").setup()
+end)
+later(function()
+	require("mini.extra").setup()
+end)
 later(function()
 	require("nvim-treesitter.configs").setup({
 		auto_install = true,
@@ -149,13 +191,27 @@ now(function()
 			vim.keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
 		end,
 	})
-	require("lspconfig").lua_ls.setup({
-		settings = {
-			Lua = {
-				diagnostics = {
-					globals = { "vim", "MiniDeps" },
-				},
+	local lua_settings = {
+		Lua = {
+			diagnostics = {
+				globals = { "vim", "MiniDeps" },
 			},
 		},
-	})
+	}
+	local lspconfig = require("lspconfig")
+	lspconfig.lua_ls.setup({ settings = lua_settings })
+	lspconfig.clangd.setup({})
+
+	vim.keymap.set("n", "<leader>ld", function()
+		vim.lsp.buf.definition()
+	end, { desc = "goto definition" })
+	vim.keymap.set("n", "<leader>lr", function()
+		vim.lsp.buf.rename()
+	end, { desc = "lsp refactor" })
+	vim.keymap.set("n", "<leader>la", function()
+		vim.lsp.buf.code_action()
+	end, { desc = "lsp actions" })
+	vim.keymap.set("n", "<leader>le", function()
+		require("mini.extra").pickers.diagnostic({ scope = "current" })
+	end, { desc = "lsp errors" })
 end)
