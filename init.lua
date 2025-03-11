@@ -6,8 +6,6 @@ if not vim.loop.fs_stat(mini_path) then
 		"git",
 		"clone",
 		"--filter=blob:none",
-		-- Uncomment next line to use 'stable' branch
-		-- '--branch', 'stable',
 		"https://github.com/echasnovski/mini.nvim",
 		mini_path,
 	}
@@ -15,111 +13,89 @@ if not vim.loop.fs_stat(mini_path) then
 	vim.cmd("packadd mini.nvim | helptags ALL")
 end
 require("mini.deps").setup({ path = { package = path_package } })
-
 local add, now, later = MiniDeps.add, MiniDeps.now, MiniDeps.later
-
 now(function()
-	vim.g.mapleader = " "
-	vim.g.maplocalleader = "\\"
+	vim.g.mapleader = vim.keycode("<space>")
+	vim.g.maplocalleader = vim.keycode("<cr>")
 	vim.wo.number = true
-	vim.wo.relativenumber = true
 	vim.o.tabstop = 8
-	vim.o.softtabstop = 0
+	vim.o.softtabstop = 8
+	vim.o.shiftwidth = 8
 	vim.o.cursorline = true
-	vim.o.showmode = false
+	vim.o.relativenumber = true
+	vim.o.ignorecase = true
+	vim.o.smartcase = true
+	vim.o.guicursor = ""
+	-- vim.g.netrw_banner = 0
 	vim.o.background = "dark"
-	vim.g.netrw_bufsettings = "noma nomod nu rnu nobl nowrap ro"
-end)
-
-later(add({ source = "neovim/nvim-lspconfig" }))
-later(add({
-	source = "nvim-treesitter/nvim-treesitter",
-	-- depends = { "nvim-treesitter/nvim-ts-autotag" },
-	hooks = {
-		post_checkout = function()
-			vim.cmd("TSUpdate")
-		end,
-	},
-}))
-
-now(function()
-	require("mini.base16").setup({
-		palette = {
-			base00 = "#1A1B26",
-			base01 = "#16161E",
-			base02 = "#2F3549",
-			base03 = "#444B6A",
-			base04 = "#787C99",
-			base05 = "#A9B1D6",
-			base06 = "#CBCCD1",
-			base07 = "#D5D6DB",
-			base08 = "#C0CAF5",
-			base09 = "#A9B1D6",
-			base0A = "#0DB9D7",
-			base0B = "#9ECE6A",
-			base0C = "#B4F9F8",
-			base0D = "#2AC3DE",
-			base0E = "#BB9AF7",
-			base0F = "#F7768E",
-		},
-	})
+	vim.g.netrw_bufsettings = "noma nomod nu nobl nowrap ro"
 end)
 now(function()
-	require("mini.starter").setup()
+	local palette = {
+		base00 = "#303030",
+		base01 = "#3a3a3a",
+		base02 = "#4e4e4e",
+		base03 = "#6c6c6c",
+		base04 = "#8a8a8a",
+		base05 = "#c6c6c6",
+		base06 = "#c6c6c6",
+		base07 = "#eeeeee",
+		base08 = "#ff4ea3",
+		base09 = "#ff8700",
+		base0A = "#ffd700",
+		base0B = "#a1db00",
+		base0C = "#00d7af",
+		base0D = "#5fafd7",
+		base0E = "#d18aff",
+		base0F = "#ef2929",
+	}
+	local tomorrow = {
+		base00 = "#181818",
+		base01 = "#282828",
+		base02 = "#383838",
+		base03 = "#585858",
+		base04 = "#b8b8b8",
+		base05 = "#d8d8d8",
+		base06 = "#e8e8e8",
+		base07 = "#f8f8f8",
+		base08 = "#ab4642",
+		base09 = "#dc9656",
+		base0A = "#f7ca88",
+		base0B = "#a1b56c",
+		base0C = "#86c1b9",
+		base0D = "#7cafc2",
+		base0E = "#ba8baf",
+		base0F = "#a16946",
+	}
+	require("mini.base16").setup({ palette = palette })
+	-- require("mini.hues").setup({ foreground = "#c6c6c6", background = "#303030" })
+
+	-- add({ source = "folke/tokyonight.nvim" })
+	-- require("tokyonight").setup({
+	-- 	vim.cmd("colorscheme tokyonight-night")
+	-- })
 end)
-later(function()
-	require("mini.pick").setup({
-		vim.keymap.set("n", "<leader>ff", "<cmd>Pick files<cr>", { desc = "find file" }),
-		vim.keymap.set("n", "<leader>fs", "<cmd>Pick grep<cr>", { desc = "find string" }),
-		vim.keymap.set("n", "<leader>fb", "<cmd>Pick buffers<cr>", { desc = "find buffer" }),
-	})
-end)
-later(function()
-	require("mini.files").setup({
-		-- vim.keymap.set("n", "<leader>op", "<cmd>Pick files<cr>", { desc = "find file" }),
-		vim.keymap.set("n", "<leader>e", function()
-			if not require("mini.files").close() then
-				require("mini.files").open()
-			end
-		end, { desc = "explore" }),
-	})
-end)
-later(function()
-	require("mini.pairs").setup()
-end)
-later(function()
-	require("mini.icons").setup()
-end)
-later(function()
-	require("mini.statusline").setup()
-end)
-later(function()
-	require("mini.bracketed").setup()
-end)
--- later(function()
--- 	require("mini.ai").setup()
--- end)
-later(function()
-	require("mini.notify").setup()
-end)
-later(function()
-	require("mini.comment").setup()
-end)
+now(function() require("mini.starter").setup() end)
+now(function() require("mini.surround").setup() end)
+later(function() require("mini.pick").setup() end)
+later(function() require("mini.files").setup() end)
+later(function() require("mini.ai").setup() end)
+later(function() require("mini.pairs").setup() end)
+later(function() require("mini.icons").setup() end)
+-- later(function() require("mini.statusline").setup() end)
+later(function() require("mini.bracketed").setup() end)
+later(function() require("mini.ai").setup() end)
+-- later(function() require("mini.notify").setup() end)
+later(function() require("mini.comment").setup() end)
 later(function()
 	require("mini.indentscope").setup({
 		draw = {
-			animation = function()
-				return 0
-			end,
+			animation = function() return 0 end,
 		},
 	})
 end)
-later(function()
-	require("mini.move").setup()
-end)
-later(function()
-	require("mini.diff").setup()
-end)
+later(function() require("mini.move").setup() end)
+later(function() require("mini.diff").setup() end)
 later(function()
 	require("mini.hipatterns").setup({
 		highlighters = {
@@ -134,63 +110,44 @@ later(function()
 		},
 	})
 end)
--- uncomment for completion
---
 later(function()
 	require("mini.completion").setup({
 		-- dont want this to show up unless intentionally
 		delay = { completion = 10 ^ 3.301, info = 10 ^ 3.301, signature = 10 ^ 3.301 },
 	})
 end)
+later(function() require("mini.trailspace").setup() end)
+later(function() require("mini.surround").setup() end)
+later(function() require("mini.extra").setup() end)
 later(function()
-    require("mini.trailspace").setup()
+	add({ source = "stevearc/conform.nvim" })
+	require("conform").setup({
+		formatters_by_ft = {
+			c = { "clang-format" },
+			lua = { "stylua" },
+		},
+	})
 end)
 later(function()
-    require("mini.surround").setup()
-end)
-later(function()
-	require("mini.extra").setup()
-end)
-later(function()
+	add({
+		source = "nvim-treesitter/nvim-treesitter",
+		-- depends = { "nvim-treesitter/nvim-ts-autotag" },
+		hooks = {
+			post_checkout = function() vim.cmd("TSUpdate") end,
+		},
+	})
 	require("nvim-treesitter.configs").setup({
 		auto_install = true,
 		highlight = { enable = true },
 		indent = { enable = true },
+		-- god save me i dont want to make webapps
 		-- enable autotagging (w/ nvim-ts-autotag plugin)
 		-- autotag = { enable = true },
-		ensure_installed = {
-			"bash",
-			"c",
-			"css",
-			"dockerfile",
-			"gitignore",
-			"html",
-			"javascript",
-			"lua",
-			"markdown",
-			"rust",
-		},
 	})
 end)
 now(function()
-	vim.api.nvim_create_autocmd({ "LspProgress" }, {
-		callback = function(context)
-			vim.notify(vim.inspect(context))
-			-- or vim.print(context) if you want something less invasive
-		end,
-	})
-	vim.api.nvim_create_autocmd("LspAttach", {
-		group = vim.api.nvim_create_augroup("UserLspConfig", {}),
-		callback = function(ev)
-			local opts = { buffer = ev.buf, silent = true }
-
-			opts.desc = "Show documentation for what is under cursor"
-			vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-
-			opts.desc = "Restart LSP"
-			vim.keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
-		end,
-	})
+	-- lsp
+	add({ source = "neovim/nvim-lspconfig" })
 	local lua_settings = {
 		Lua = {
 			diagnostics = {
@@ -201,17 +158,45 @@ now(function()
 	local lspconfig = require("lspconfig")
 	lspconfig.lua_ls.setup({ settings = lua_settings })
 	lspconfig.clangd.setup({})
+end)
+now(function()
+	-- picker
+	vim.keymap.set("n", "<leader>ff", "<cmd>Pick files<cr>", { desc = "find file" })
+	vim.keymap.set("n", "<leader>fs", "<cmd>Pick grep<cr>", { desc = "find string" })
+	vim.keymap.set("n", "<leader>fb", "<cmd>Pick buffers<cr>", { desc = "find buffer" })
+	vim.keymap.set("n", "<leader>fd", "<cmd>Pick diagnostic scope='all'", { desc = "find diagnostic" })
 
-	vim.keymap.set("n", "<leader>ld", function()
-		vim.lsp.buf.definition()
-	end, { desc = "goto definition" })
-	vim.keymap.set("n", "<leader>lr", function()
-		vim.lsp.buf.rename()
-	end, { desc = "lsp refactor" })
-	vim.keymap.set("n", "<leader>la", function()
-		vim.lsp.buf.code_action()
-	end, { desc = "lsp actions" })
-	vim.keymap.set("n", "<leader>le", function()
-		require("mini.extra").pickers.diagnostic({ scope = "current" })
-	end, { desc = "lsp errors" })
+	-- explorer
+	vim.keymap.set("n", "<leader>ed", "<cmd>lua MiniFiles.open()<cr>", { desc = "explore" })
+
+	-- formatter
+	local format_cmd = "<cmd>lua require('conform').format({ lsp_fallback = true })<cr>"
+	vim.keymap.set("n", "<leader>bf", format_cmd, { desc = "format" })
+
+	vim.api.nvim_create_autocmd("LspAttach", {
+		callback = function(args)
+			-- lsp
+			vim.keymap.set("n", "grn", "<cmd>lua vim.lsp.buf.rename()<cr>", { desc = "refactor" })
+			vim.keymap.set("n", "gra", "<cmd>lua vim.lsp.buf.code_action()<cr>", { desc = "actions" })
+			vim.keymap.set("n", "grr", "<cmd>lua vim.lsp.buf.references()<cr>", { desc = "references" })
+			vim.keymap.set(
+				"i",
+				"<C-s>",
+				"<cmd>lua vim.lsp.buf.signature_help()<cr>",
+				{ desc = "signatures" }
+			)
+			vim.keymap.set(
+				"n",
+				"<leader>lj",
+				"<Cmd>lua vim.diagnostic.goto_next()<cr>",
+				{ desc = "next diagnostic" }
+			)
+			vim.keymap.set(
+				"n",
+				"<leader>lk",
+				"<Cmd>lua vim.diagnostic.goto_prev()<cr>",
+				{ desc = "prev diagnostic" }
+			)
+		end,
+	})
 end)
