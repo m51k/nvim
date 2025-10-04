@@ -4,9 +4,21 @@ return {
         vim.lsp.enable({
             "lua_ls",
             "clangd",
-            "pyright",
+            "basedpyright",
             "tsserver",
         })
+
+		vim.lsp.config("basedpyright", {
+				-- capabilities = capabilities,
+				settings = {
+					basedpyright = {
+						analysis = {
+							typeCheckingMode = "basic",
+						},
+					},
+				},
+		})
+
         vim.diagnostic.config({
             virtual_text = {
                 true,
