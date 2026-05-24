@@ -1,126 +1,113 @@
-local path_package = vim.fn.stdpath("data") .. "/site/"
-local mini_path = path_package .. "pack/deps/start/mini.deps"
-if not vim.loop.fs_stat(mini_path) then
-    vim.cmd('echo "Installing `mini.deps`" | redraw')
-    local clone_cmd = {
-        "git",
-        "clone",
-        "--filter=blob:none",
-        "https://github.com/nvim-mini/mini.deps",
-        mini_path,
-    }
-    vim.fn.system(clone_cmd)
-    vim.cmd("packadd mini.deps | helptags ALL")
-    vim.cmd('echo "Installed `mini.deps`" | redraw')
-end
+---@diagnostic disable: missing-fields, undefined-field
 
-require("mini.deps").setup({ path = { package = path_package } })
-
-vim.o.guicursor = ""
-vim.o.number = true
-vim.o.relativenumber = true
-vim.o.cursorline = true
 vim.g.mapleader = vim.keycode("<Space>")
 vim.g.localleader = vim.keycode("<Space>")
-vim.o.tabstop = 4
-vim.o.shiftwidth = 4
+vim.opt.termguicolors = true
+vim.opt.number = true
+vim.opt.relativenumber = true
 
-local add = MiniDeps.add
+-- clipboard tool: xclip/xsel/win32yank
+vim.opt.clipboard = "unnamedplus"
 
--- ============================== packages ==============================
-add({
-    source = "neovim/nvim-lspconfig",
-    depends = { "williamboman/mason.nvim" },
-})
+vim.opt.undofile = true
+vim.opt.signcolumn = "yes"
+vim.opt.list = true
+vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣", }
+vim.opt.inccommand = "split"
 
-add({
-    source = "nvim-treesitter/nvim-treesitter",
-    hooks = { post_checkout = function() vim.cmd("TSUpdate") end },
-})
+vim.opt.cursorline = true
+-- vim.o.guicursor = ""
 
-add({
-    source = "igorlfs/nvim-dap-view",
-    depends = { "mfussenegger/nvim-dap", "theHamsta/nvim-dap-virtual-text" },
-})
+vim.opt.hlsearch = true
 
-add("ibhagwan/fzf-lua")
-add("stevearc/oil.nvim")
-add("stevearc/conform.nvim")
+vim.opt.breakindent = true
 
--- ============================== keybinds ==============================
-local map = function(suffix, cmd) vim.keymap.set("n", suffix, cmd) end
-local nmap = function(suffix, cmd) vim.keymap.set("n", "<Leader>" .. suffix, cmd) end
+vim.opt.wrap = true
 
-nmap("ff", function() require("fzf-lua").files() end)
-
-nmap("dB", function() require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: ")) end)
-nmap("db", function() require("dap").toggle_breakpoint() end)
-nmap("dc", function() require("dap").continue() end)
--- nmap("da", function() require("dap").continue({ before = get_args }) end)
-nmap("dC", function() require("dap").run_to_cursor() end)
-nmap("dg", function() require("dap").goto_() end)
-nmap("di", function() require("dap").step_into() end)
-nmap("dj", function() require("dap").down() end)
-nmap("dk", function() require("dap").up() end)
-nmap("dl", function() require("dap").run_last() end)
-nmap("do", function() require("dap").step_out() end)
-nmap("dO", function() require("dap").step_over() end)
-nmap("dP", function() require("dap").pause() end)
-nmap("dr", function() require("dap").repl.toggle() end)
-nmap("ds", function() require("dap").session() end)
-nmap("dt", function() require("dap").terminate() end)
-nmap("dw", function() require("dap.ui.widgets").hover() end)
-nmap("dv", function() require("dap-view").toggle() end)
-
-nmap("lf", function() require("conform").format({ lsp_fallback = true }) end)
-
-map("-", "<cmd>Oil<cr>")
-
--- ============================== configs ==============================
-vim.lsp.enable({
-    "lua_ls",
-    "clangd",
-    "basedpyright",
-    "tsserver",
-})
-
-vim.lsp.config("basedpyright", {
-    -- capabilities = capabilities,
-    settings = {
-        basedpyright = {
-            analysis = {
-                typeCheckingMode = "basic",
-            },
-        },
-    },
-})
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
+vim.opt.textwidth = 80
 
 vim.diagnostic.config({
-    virtual_text = {
-        true,
-        prefix = "●",
-    },
     signs = {
         text = {
-            [vim.diagnostic.severity.ERROR] = "",
-            [vim.diagnostic.severity.WARN] = "",
-            [vim.diagnostic.severity.HINT] = "",
-            [vim.diagnostic.severity.INFO] = "",
+            [vim.diagnostic.severity.ERROR] = " ",
+            [vim.diagnostic.severity.WARN] = " ",
+            [vim.diagnostic.severity.INFO] = " ",
+            [vim.diagnostic.severity.HINT] = " ",
         },
     },
+    virtual_text = true,
 })
 
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
+
+-- colorscheme
+vim.pack.add({ "https://github.com/bluz71/vim-moonfly-colors" }, { confirm = false })
+vim.cmd.colorscheme("moonfly")
+
+-- lsp
+vim.pack.add({
+    "https://github.com/neovim/nvim-lspconfig",
+    "https://github.com/mason-org/mason.nvim",
+    "https://github.com/mason-org/mason-lspconfig.nvim",
+    "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim"
+}, { confirm = false })
+
+local lsp_servers = {
+    lua_ls = {
+        Lua = { workspace = { library = vim.api.nvim_get_runtime_file("lua", true) }, },
+    },
+    clangd = {},
+    rust_analyzer = {},
+    gopls = {},
+    ts_ls = {},
+    basedpyright = {},
+}
+
 require("mason").setup()
-require("nvim-treesitter").install({ "lua", "cpp" })
+require("mason-lspconfig").setup()
+require("mason-tool-installer").setup({
+    ensure_installed = vim.tbl_keys(lsp_servers),
+})
+
+for server, config in pairs(lsp_servers) do
+    vim.lsp.config(server, {
+        settings = config,
+
+        on_attach = function(_, bufnr)
+            vim.keymap.set("n", "grd", vim.lsp.buf.definition,
+            { buffer = bufnr, desc = "vim.lsp.buf.definition()", })
+
+            vim.keymap.set("n", "grf", vim.lsp.buf.format,
+            { buffer = bufnr, desc = "vim.lsp.buf.format()", })
+        end,
+    })
+end
+
+-- debugger
+vim.pack.add({
+    "https://github.com/mfussenegger/nvim-dap",
+    "https://github.com/theHamsta/nvim-dap-virtual-text",
+    -- "https://github.com/igorlfs/nvim-dap-view",
+    "https://github.com/MironPascalCaseFan/debugmaster.nvim",
+}, { confirm = false })
 
 require("nvim-dap-virtual-text").setup()
 local dap = require("dap")
-local dv = require("dap-view")
+local dm = require("debugmaster")
+-- local dv = require("dap-view")
 
-dap.listeners.before.attach["dap-view-config"] = function() dv.open() end
-dap.listeners.before.launch["dap-view-config"] = function() dv.open() end
-dap.listeners.before.event_terminated["dap-view-config"] = function() dv.close(true) end
-dap.listeners.before.event_exited["dap-view-config"] = function() dv.close(true) end
+-- dm.plugins.cursor_hl.enabled = false
+
+vim.keymap.set({ "n", "v" }, "<leader>d", dm.mode.toggle, { nowait = true })
+vim.keymap.set("t", "<C-\\>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+-- dap.listeners.before.attach["dap-view-config"] = function() dv.open() end
+-- dap.listeners.before.launch["dap-view-config"] = function() dv.open() end
+-- dap.listeners.before.event_terminated["dap-view-config"] = function() dv.close(true) end
+-- dap.listeners.before.event_exited["dap-view-config"] = function() dv.close(true) end
 
 -- adapter config
 dap.adapters.codelldb = {
@@ -129,31 +116,124 @@ dap.adapters.codelldb = {
 
     -- On windows you may have to uncomment this:
     -- detached = false,
+    detached = vim.fn.has("win32") == 0,
+}
+dap.adapters.delve = function(callback, config)
+    if config.mode == 'remote' and config.request == 'attach' then
+        callback({
+            type = 'server',
+            host = config.host or '127.0.0.1',
+            port = config.port or '38697'
+        })
+    else
+        callback({
+            type = 'server',
+            port = '${port}',
+            executable = {
+                command = 'dlv',
+                args = { 'dap', '-l', '127.0.0.1:${port}', '--log', '--log-output=dap' },
+                detached = vim.fn.has("win32") == 0,
+            }
+        })
+    end
+end
+dap.adapters["pwa-node"] = {
+    type = "server",
+    host = "127.0.0.1",
+    port = "${port}",
+    executable = {
+        command = "node",
+        args = {
+            vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js",
+            "${port}",
+            "127.0.0.1",
+        },
+        detached = vim.fn.has("win32") == 0,
+    },
 }
 
 -- language config
-dap.configurations.cpp = {
+for _, language in ipairs { 'cpp', 'c', 'rust' } do
+    dap.configurations[language] = {
+        {
+            name = "Launch file",
+            type = "codelldb",
+            request = "launch",
+            program = function() return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file") end,
+            cwd = "${workspaceFolder}",
+            stopOnEntry = false,
+        },
+    }
+end
+-- https://github.com/go-delve/delve/blob/master/Documentation/usage/dlv_dap.md
+dap.configurations.go = {
     {
-        name = "Launch file",
-        type = "codelldb",
+        type = "delve",
+        name = "Debug",
         request = "launch",
-        program = function() return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file") end,
-        cwd = "${workspaceFolder}",
-        stopOnEntry = false,
+        program = "${file}"
     },
+    {
+        type = "delve",
+        name = "Debug test", -- configuration for debugging test files
+        request = "launch",
+        mode = "test",
+        program = "${file}"
+    },
+    -- works with go.mod packages and sub packages 
+    {
+        type = "delve",
+        name = "Debug test (go.mod)",
+        request = "launch",
+        mode = "test",
+        program = "./${relativeFileDirname}"
+    }
 }
-dap.configurations.c = dap.configurations.cpp
-dap.configurations.rust = dap.configurations.cpp
+for _, language in ipairs { 'typescript', 'javascript' } do
+    dap.configurations[language] = {
+        {
+            type = 'pwa-node',
+            request = 'attach',
+            name = 'Attach',
+            processId = require('dap.utils').pick_process,
+            cwd = '${workspaceFolder}',
+        },
+    }
+end
 
-require("fzf-lua").setup({
-    fzf_colors = { true },
+-- vim.keymap.set("n", "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: ")) end, { desc = "[D]ebug set [B]reakpoint (condition)" })
+-- vim.keymap.set("n", "<leader>db", function() require("dap").toggle_breakpoint() end, { desc = "[D]ebug toggle [B]reakpoint" })
+-- vim.keymap.set("n", "<leader>dc", function() require("dap").continue() end, { desc = "[D]ebug [C]ontinue" })
+-- -- vim.keymap.set("n", "<leader>da", function() require("dap").continue({ before = get_args }) end, { desc = "[D]ebug [A]rguments" })
+-- vim.keymap.set("n", "<leader>dC", function() require("dap").run_to_cursor() end, { desc = "[D]ebug run to [C]ursor" })
+-- vim.keymap.set("n", "<leader>dg", function() require("dap").goto_() end, { desc = "[D]ebug [G]oto" })
+-- vim.keymap.set("n", "<leader>di", function() require("dap").step_into() end, { desc = "[D]ebug step [I]nto" })
+-- vim.keymap.set("n", "<leader>dj", function() require("dap").down() end, { desc = "[D]ebug [J](down)" })
+-- vim.keymap.set("n", "<leader>dk", function() require("dap").up() end, { desc = "[D]ebug [K](up)" })
+-- vim.keymap.set("n", "<leader>dl", function() require("dap").run_last() end, { desc = "[D]ebug run [L]ast" })
+-- vim.keymap.set("n", "<leader>do", function() require("dap").step_out() end, { desc = "[D]ebug step [O]ut" })
+-- vim.keymap.set("n", "<leader>dO", function() require("dap").step_over() end, { desc = "[D]ebug step [O]ver" })
+-- vim.keymap.set("n", "<leader>dP", function() require("dap").pause() end, { desc = "[D]ebug [P]ause" })
+-- vim.keymap.set("n", "<leader>dr", function() require("dap").repl.toggle() end, { desc = "[D]ebug [R]EPL toggle" })
+-- vim.keymap.set("n", "<leader>ds", function() require("dap").session() end, { desc = "[D]ebug [S]ession" })
+-- vim.keymap.set("n", "<leader>dt", function() require("dap").terminate() end, { desc = "[D]ebug [T]erminate" })
+-- vim.keymap.set("n", "<leader>dw", function() require("dap.ui.widgets").hover() end, { desc = "[D]ebug [W]idgets hover" })
+-- vim.keymap.set("n", "<leader>dv", function() require("dap-view").toggle() end, { desc = "[D]ebug [V]iew toggle" })
+
+-- fuzzy finder
+vim.pack.add({ "https://github.com/ibhagwan/fzf-lua.git" }, { confirm = false })
+require("fzf-lua").setup({ fzf_colors = { true }})
+
+vim.keymap.set("n", "<leader>ff", "<cmd>FzfLua files<CR>", { desc = "[F]ind [F]ile", })
+
+-- whichkey
+vim.pack.add({ "https://github.com/folke/which-key.nvim" }, { confirm = false })
+
+require("which-key").setup({
+    spec = {
+        { "<leader>f", group = "[F]ind" },
+        { "<leader>d", group = "[D]ebug" },
+    }
 })
 
-require("oil").setup()
-require("conform").setup({
-    formatters_by_ft = {
-        lua = { "stylua" },
-        cpp = { "clang-format" },
-        -- python = { "isort", "black" },
-    },
-})
+-- vim.pack.update()
