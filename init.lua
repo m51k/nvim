@@ -12,7 +12,7 @@ vim.opt.clipboard = "unnamedplus"
 vim.opt.undofile = true
 vim.opt.signcolumn = "yes"
 vim.opt.list = true
-vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣", }
+vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
 vim.opt.inccommand = "split"
 
 vim.opt.cursorline = true
@@ -28,6 +28,10 @@ vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.textwidth = 80
+
+-- completion
+vim.opt.completeopt = { "menuone", "noselect", "popup", "fuzzy" }
+vim.opt.pumheight = 10
 
 vim.diagnostic.config({
     signs = {
@@ -52,12 +56,12 @@ vim.pack.add({
     "https://github.com/neovim/nvim-lspconfig",
     "https://github.com/mason-org/mason.nvim",
     "https://github.com/mason-org/mason-lspconfig.nvim",
-    "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim"
+    "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim",
 }, { confirm = false })
 
 local lsp_servers = {
     lua_ls = {
-        Lua = { workspace = { library = vim.api.nvim_get_runtime_file("lua", true) }, },
+        Lua = { workspace = { library = vim.api.nvim_get_runtime_file("lua", true) } },
     },
     clangd = {},
     rust_analyzer = {},
@@ -76,15 +80,30 @@ for server, config in pairs(lsp_servers) do
     vim.lsp.config(server, {
         settings = config,
 
-        on_attach = function(_, bufnr)
-            vim.keymap.set("n", "grd", vim.lsp.buf.definition,
-            { buffer = bufnr, desc = "vim.lsp.buf.definition()", })
+        on_attach = function(client, bufnr)
+            if client:supports_method("textDocument/completion") then
+                vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
+            end
 
-            vim.keymap.set("n", "grf", vim.lsp.buf.format,
-            { buffer = bufnr, desc = "vim.lsp.buf.format()", })
+            vim.keymap.set("n", "grd", vim.lsp.buf.definition, { buffer = bufnr, desc = "vim.lsp.buf.definition()" })
+
+            vim.keymap.set("n", "grf", vim.lsp.buf.format, { buffer = bufnr, desc = "vim.lsp.buf.format()" })
         end,
     })
 end
+
+-- snippet placeholder navigation
+vim.keymap.set({ "i", "s" }, "<C-k>", function()
+    if vim.snippet.active({ direction = 1 }) then
+        vim.snippet.jump(1)
+    end
+end, { desc = "Snippet jump forward" })
+
+vim.keymap.set({ "i", "s" }, "<C-j>", function()
+    if vim.snippet.active({ direction = -1 }) then
+        vim.snippet.jump(-1)
+    end
+end, { desc = "Snippet jump backward" })
 
 -- debugger
 vim.pack.add({
@@ -119,21 +138,21 @@ dap.adapters.codelldb = {
     detached = vim.fn.has("win32") == 0,
 }
 dap.adapters.delve = function(callback, config)
-    if config.mode == 'remote' and config.request == 'attach' then
+    if config.mode == "remote" and config.request == "attach" then
         callback({
-            type = 'server',
-            host = config.host or '127.0.0.1',
-            port = config.port or '38697'
+            type = "server",
+            host = config.host or "127.0.0.1",
+            port = config.port or "38697",
         })
     else
         callback({
-            type = 'server',
-            port = '${port}',
+            type = "server",
+            port = "${port}",
             executable = {
-                command = 'dlv',
-                args = { 'dap', '-l', '127.0.0.1:${port}', '--log', '--log-output=dap' },
+                command = "dlv",
+                args = { "dap", "-l", "127.0.0.1:${port}", "--log", "--log-output=dap" },
                 detached = vim.fn.has("win32") == 0,
-            }
+            },
         })
     end
 end
@@ -153,7 +172,7 @@ dap.adapters["pwa-node"] = {
 }
 
 -- language config
-for _, language in ipairs { 'cpp', 'c', 'rust' } do
+for _, language in ipairs({ "cpp", "c", "rust" }) do
     dap.configurations[language] = {
         {
             name = "Launch file",
@@ -171,32 +190,32 @@ dap.configurations.go = {
         type = "delve",
         name = "Debug",
         request = "launch",
-        program = "${file}"
+        program = "${file}",
     },
     {
         type = "delve",
         name = "Debug test", -- configuration for debugging test files
         request = "launch",
         mode = "test",
-        program = "${file}"
+        program = "${file}",
     },
-    -- works with go.mod packages and sub packages 
+    -- works with go.mod packages and sub packages
     {
         type = "delve",
         name = "Debug test (go.mod)",
         request = "launch",
         mode = "test",
-        program = "./${relativeFileDirname}"
-    }
+        program = "./${relativeFileDirname}",
+    },
 }
-for _, language in ipairs { 'typescript', 'javascript' } do
+for _, language in ipairs({ "typescript", "javascript" }) do
     dap.configurations[language] = {
         {
-            type = 'pwa-node',
-            request = 'attach',
-            name = 'Attach',
-            processId = require('dap.utils').pick_process,
-            cwd = '${workspaceFolder}',
+            type = "pwa-node",
+            request = "attach",
+            name = "Attach",
+            processId = require("dap.utils").pick_process,
+            cwd = "${workspaceFolder}",
         },
     }
 end
@@ -221,10 +240,134 @@ end
 -- vim.keymap.set("n", "<leader>dv", function() require("dap-view").toggle() end, { desc = "[D]ebug [V]iew toggle" })
 
 -- fuzzy finder
-vim.pack.add({ "https://github.com/ibhagwan/fzf-lua.git" }, { confirm = false })
-require("fzf-lua").setup({ fzf_colors = { true }})
+-- vim.pack.add({ "https://github.com/ibhagwan/fzf-lua.git" }, { confirm = false })
+-- require("fzf-lua").setup({ fzf_colors = { true }})
+--
+-- vim.keymap.set("n", "<leader>ff", "<cmd>FzfLua files<CR>", { desc = "[F]ind [F]ile", })
 
-vim.keymap.set("n", "<leader>ff", "<cmd>FzfLua files<CR>", { desc = "[F]ind [F]ile", })
+vim.pack.add({ "https://github.com/folke/snacks.nvim" }, { confirm = false })
+
+require("snacks").setup({
+    bigfile = { enabled = true },
+    indent = { enabled = true },
+    scroll = { enabled = true },
+    words = { enabled = true },
+    statuscolumn = { enabled = true },
+    input = { enabled = true },
+    notifier = { enabled = true },
+    bufdelete = { enabled = true },
+    quickfile = { enabled = true },
+    scope = { enabled = true },
+    toggle = { enabled = true },
+})
+
+-- picker
+vim.keymap.set("n", "<leader><leader>", function() Snacks.picker.smart() end, { desc = "Smart Smart Find" })
+vim.keymap.set("n", "<leader>e", function() Snacks.explorer() end, { desc = "Snacks Explorer" })
+vim.keymap.set("n", "<leader>fb", function() Snacks.picker.buffers() end, { desc = "Snacks Find Buffer" })
+vim.keymap.set("n", "<leader>ff", function() Snacks.picker.files() end, { desc = "Snacks Find Files" })
+
+-- words: jump between LSP references under cursor
+vim.keymap.set({ "n", "t" }, "]]", function() Snacks.words.jump(vim.v.count1) end, { desc = "Next Reference" })
+vim.keymap.set({ "n", "t" }, "[[", function() Snacks.words.jump(-vim.v.count1) end, { desc = "Prev Reference" })
+
+-- notifier: review notification history
+vim.keymap.set("n", "<leader>n", function() Snacks.picker.notifications() end, { desc = "Notification History" })
+vim.keymap.set("n", "<leader>un", function() Snacks.notifier.hide() end, { desc = "Dismiss All Notifications" })
+
+-- git
+vim.keymap.set("n", "<leader>gs", function() Snacks.picker.git_status() end, { desc = "Git Status" })
+vim.keymap.set("n", "<leader>gb", function() Snacks.picker.git_branches() end, { desc = "Git Branches" })
+vim.keymap.set("n", "<leader>gl", function() Snacks.picker.git_log() end, { desc = "Git Log" })
+vim.keymap.set("n", "<leader>gf", function() Snacks.picker.git_log_file() end, { desc = "Git Log File" })
+vim.keymap.set("n", "<leader>gL", function() Snacks.picker.git_log_line() end, { desc = "Git Log Line" })
+vim.keymap.set("n", "<leader>gd", function() Snacks.picker.git_diff() end, { desc = "Git Diff (Hunks)" })
+vim.keymap.set("n", "<leader>gS", function() Snacks.picker.git_stash() end, { desc = "Git Stash" })
+
+vim.keymap.set("n", "<leader>gg", function() Snacks.lazygit() end, { desc = "Lazygit" })
+vim.keymap.set({ "n", "v" }, "<leader>gB", function() Snacks.gitbrowse() end, { desc = "Git Browse" })
+
+-- mini.nvim
+vim.pack.add({ "https://github.com/echasnovski/mini.nvim" }, { confirm = false })
+
+require("mini.ai").setup()
+require("mini.surround").setup()
+require("mini.pairs").setup()
+
+require("mini.diff").setup()
+-- default operators: `gh` apply hunk, `gH` reset hunk, `gh` is also a hunk textobject
+vim.keymap.set(
+    "n",
+    "<leader>go",
+    function() require("mini.diff").toggle_overlay(0) end,
+    { desc = "Toggle Diff Overlay" }
+)
+
+require("mini.git").setup()
+
+vim.keymap.set(
+    { "n", "x" },
+    "<leader>gc",
+    function() require("mini.git").show_at_cursor() end,
+    { desc = "Git Show At Cursor (blame/commit)" }
+)
+
+-- sidekick
+vim.pack.add({ "https://github.com/folke/sidekick.nvim" }, { confirm = false })
+
+require("sidekick").setup({
+    cli = {
+        mux = {
+            backend = "tmux",
+            enabled = true,
+        },
+    },
+})
+
+vim.keymap.set("n", "<tab>", function()
+    if not require("sidekick").nes_jump_or_apply() then return "<Tab>" end
+end, { expr = true, desc = "Goto/Apply Next Edit Suggestion" })
+
+vim.keymap.set(
+    { "n", "t", "i", "x" },
+    "<c-.>",
+    function() require("sidekick.cli").focus() end,
+    { desc = "Sidekick Focus" }
+)
+
+vim.keymap.set("n", "<leader>aa", function() require("sidekick.cli").toggle() end, { desc = "Sidekick Toggle CLI" })
+vim.keymap.set("n", "<leader>as", function() require("sidekick.cli").select() end, { desc = "Select CLI" })
+vim.keymap.set("n", "<leader>ad", function() require("sidekick.cli").close() end, { desc = "Detach a CLI Session" })
+vim.keymap.set(
+    { "x", "n" },
+    "<leader>at",
+    function() require("sidekick.cli").send({ msg = "{this}" }) end,
+    { desc = "Send This" }
+)
+vim.keymap.set(
+    "n",
+    "<leader>af",
+    function() require("sidekick.cli").send({ msg = "{file}" }) end,
+    { desc = "Send File" }
+)
+vim.keymap.set(
+    "x",
+    "<leader>av",
+    function() require("sidekick.cli").send({ msg = "{selection}" }) end,
+    { desc = "Send Visual Selection" }
+)
+vim.keymap.set(
+    { "n", "x" },
+    "<leader>ap",
+    function() require("sidekick.cli").prompt() end,
+    { desc = "Sidekick Select Prompt" }
+)
+vim.keymap.set(
+    "n",
+    "<leader>ac",
+    function() require("sidekick.cli").toggle({ name = "claude", focus = true }) end,
+    { desc = "Sidekick Toggle Claude" }
+)
 
 -- whichkey
 vim.pack.add({ "https://github.com/folke/which-key.nvim" }, { confirm = false })
@@ -233,7 +376,8 @@ require("which-key").setup({
     spec = {
         { "<leader>f", group = "[F]ind" },
         { "<leader>d", group = "[D]ebug" },
-    }
+        { "<leader>a", group = "[A]I/Sidekick" },
+    },
 })
 
 -- vim.pack.update()
